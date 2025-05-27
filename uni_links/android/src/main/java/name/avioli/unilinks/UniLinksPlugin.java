@@ -13,14 +13,12 @@ import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
-import io.flutter.plugin.common.PluginRegistry;
 
 public class UniLinksPlugin
         implements FlutterPlugin,
                 MethodChannel.MethodCallHandler,
                 EventChannel.StreamHandler,
-                ActivityAware,
-                PluginRegistry.NewIntentListener {
+                ActivityAware {
 
     private static final String MESSAGES_CHANNEL = "uni_links/messages";
     private static final String EVENTS_CHANNEL = "uni_links/events";
@@ -51,10 +49,6 @@ public class UniLinksPlugin
         return new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                // NOTE: assuming intent.getAction() is Intent.ACTION_VIEW
-
-                // Log.v("uni_links", String.format("received action: %s", intent.getAction()));
-
                 String dataString = intent.getDataString();
 
                 if (dataString == null) {
@@ -78,21 +72,6 @@ public class UniLinksPlugin
 
         final EventChannel eventChannel = new EventChannel(messenger, EVENTS_CHANNEL);
         eventChannel.setStreamHandler(plugin);
-    }
-
-    /** Plugin registration. */
-    public static void registerWith(@NonNull PluginRegistry.Registrar registrar) {
-        // Detect if we've been launched in background
-        if (registrar.activity() == null) {
-            return;
-        }
-
-        final UniLinksPlugin instance = new UniLinksPlugin();
-        instance.context = registrar.context();
-        register(registrar.messenger(), instance);
-
-        instance.handleIntent(registrar.context(), registrar.activity().getIntent());
-        registrar.addNewIntentListener(instance);
     }
 
     @Override
@@ -120,25 +99,24 @@ public class UniLinksPlugin
     }
 
     @Override
-    public boolean onNewIntent(Intent intent) {
-        this.handleIntent(context, intent);
-        return false;
-    }
-
-    @Override
     public void onAttachedToActivity(@NonNull ActivityPluginBinding activityPluginBinding) {
-        activityPluginBinding.addOnNewIntentListener(this);
-        this.handleIntent(this.context, activityPluginBinding.getActivity().getIntent());
+        activityPluginBinding.addOnNewIntentListener(intent -> {
+            handleIntent(context, intent);
+            return false;
+        });
+        handleIntent(context, activityPluginBinding.getActivity().getIntent());
     }
 
     @Override
     public void onDetachedFromActivityForConfigChanges() {}
 
     @Override
-    public void onReattachedToActivityForConfigChanges(
-            @NonNull ActivityPluginBinding activityPluginBinding) {
-        activityPluginBinding.addOnNewIntentListener(this);
-        this.handleIntent(this.context, activityPluginBinding.getActivity().getIntent());
+    public void onReattachedToActivityForConfigChanges(@NonNull ActivityPluginBinding activityPluginBinding) {
+        activityPluginBinding.addOnNewIntentListener(intent -> {
+            handleIntent(context, intent);
+            return false;
+        });
+        handleIntent(context, activityPluginBinding.getActivity().getIntent());
     }
 
     @Override
