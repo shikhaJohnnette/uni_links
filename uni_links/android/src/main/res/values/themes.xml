@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Safe theme without MaterialComponents -->
-    <style name="AppTheme" parent="@android:style/Theme.Light.NoTitleBar">
+    <style name="Theme.UniLinks" parent="android:Theme.Light">
         <item name="android:windowBackground">@android:color/white</item>
     </style>
 </resources>
-
